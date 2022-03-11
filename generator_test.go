@@ -7,26 +7,6 @@ import (
 )
 
 func TestGenerator(t *testing.T) {
-	repeat := func(
-		done <-chan interface{},
-		values ...interface{},
-	) <-chan interface{} {
-		valueStream := make(chan interface{})
-		go func() {
-			defer close(valueStream)
-			for {
-				for _, v := range values {
-					select {
-					case <-done:
-						return
-					case valueStream <- v:
-					}
-				}
-			}
-		}()
-		return valueStream
-	}
-
 	done := make(chan interface{})
 	defer close(done)
 
@@ -52,6 +32,26 @@ func TestGenerator(t *testing.T) {
 	}
 
 	fmt.Printf("message: %s...", message)
+}
+
+func repeat(
+	done <-chan interface{},
+	values ...interface{},
+) <-chan interface{} {
+	valueStream := make(chan interface{})
+	go func() {
+		defer close(valueStream)
+		for {
+			for _, v := range values {
+				select {
+				case <-done:
+					return
+				case valueStream <- v:
+				}
+			}
+		}
+	}()
+	return valueStream
 }
 
 func take(
